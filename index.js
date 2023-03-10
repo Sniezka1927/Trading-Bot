@@ -1,14 +1,38 @@
 // Requirements
 require("dotenv/config");
-const CoinbasePro = require("coinbase-pro");
-const config = require("./config.json");
+const program = require("commander");
+const historicalService = require("./src/historicalService/historicalService");
+const colors = require("colors");
+const backtester = require("./src/backtester/backtester");
+const now = new Date().getTime();
+const yesterday = new Date().getTime() - 24 * 60 * 60 * 1e3;
+
+program
+  .version("1.0.0")
+  .option(
+    "-i, --interval <interval>",
+    "Interval in seconds for candlesticks",
+    300
+  )
+  .option("-p, --product <product>", "Product identifier", "BTC-USDT")
+  .option("-s, --start <start>", "Start time in unix seconds", yesterday)
+  .option("-e, --end <end>", "End time in unix seconds", now)
+  .parse(process.argv);
+
 // Configurations
 const key = process.env.API_KEY;
 const secret = process.env.API_SECRET;
 const passphrase = process.env.API_PASSPHRASE;
 const apiURL = process.env.API_URL;
 
-const publicClient = new CoinbasePro.PublicClient();
+const main = async () => {
+  const options = program.opts();
+  const { interval, product, start, end } = options;
+  const candlesticks = await historicalService(start, end, interval, product);
+  await backtester(candlesticks);
+};
+
+main();
 
 /*
 const authedClient = new CoinbasePro.AuthenticatedClient(
@@ -18,22 +42,3 @@ const authedClient = new CoinbasePro.AuthenticatedClient(
   apiURL
 );
 */
-
-const historicalRates = async () => {
-  //   await publicClient.getProductHistoricRates("BTC-USD", callback);
-
-  // To include extra parameters:
-  const results = await publicClient.getProductHistoricRates("BTC-USDT", {
-    granularity: Number(config.timestamp),
-  });
-  console.log(results[0]);
-  console.log(new Date().getTime());
-  // Time => 1678078800
-  // Low => 19910.76
-  // High => 19965.98
-  // Open => 19951.74
-  // Close => 19923.94
-  // Volume => 434.61050953
-};
-
-historicalRates();
