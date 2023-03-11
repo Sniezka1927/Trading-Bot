@@ -1,7 +1,13 @@
 const strategy = require("../strategy/strategy");
-const { totalProfit } = require("../utils/calculateProfit");
+const historicalService = require("../historicalService/historicalService");
 const colors = require("colors");
-const backtester = async (candlesticks) => {
+const backtester = async (interval, product, start, end) => {
+  const message = colors.magenta(
+    `Analyzing Chart from ${new Date(start)} - ${new Date(end)}`
+  );
+  console.log(message);
+  const candlesticks = await historicalService(start, end, interval, product);
+
   try {
     Promise.all(
       candlesticks.map(async (stick, index) => {
