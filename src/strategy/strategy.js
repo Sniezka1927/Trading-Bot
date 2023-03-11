@@ -1,13 +1,12 @@
 // requirements
 const tradeModel = require("../models/trade");
 const positionModel = require("../models/position");
-const calculateProfit = require("../utils/calculateProfit");
+const { calculateProfit } = require("../utils/calculateProfit");
 const randomstring = require("randomstring");
 const colors = require("colors");
 
-// positions
 let positions = {};
-let closePositions = {};
+
 const strategy = (candlesticks) => {
   // simple strategy
   run(candlesticks);
@@ -21,15 +20,22 @@ const positionOpened = async (price, time, size, id) => {
 
 const positionClosed = async (price, time, amount, id) => {
   const position = positions[id];
+  const { profit, totalProfit, percentage, totalPercentage } = calculateProfit(
+    position.trade.enter,
+    price
+  );
   const message = colors.cyan(
-    `Enter: ${position.trade.enter} | ${position.trade.time} | Exit: ${price}`
+    `Enter: ${position.trade.enter} | ${
+      position.trade.time
+    } | Exit: ${price.toFixed(2)} | Trade Profit: ${Number(profit).toFixed(
+      2
+    )}$ | Percentage: ${percentage.toFixed(
+      2
+    )}% | Total Profit:${(+totalProfit).toFixed(
+      2
+    )}$ | Total Percentages: ${totalPercentage.toFixed(2)}%`
   );
   console.log(message);
-  const profitMessage = colors.blue(
-    "Profit:",
-    (position.trade.enter - price).toFixed(2)
-  );
-  console.log(profitMessage);
   if (position) {
     positions[id].state = "closed";
   }
@@ -57,13 +63,12 @@ const run = async (sticks) => {
   const price = last;
 
   // filtereing open positions
-  let openPositions = Object.keys(positions)
-    .map((k) => {
-      return positions[k];
-    })
-    .filter((p) => p.state === "open");
+  let openKeys = Object.keys(positions);
+  let AllPositionsArr = openKeys.map((k) => {
+    return positions[k];
+  });
+  let openPositions = AllPositionsArr.filter((p) => p.state === "open");
 
-  //   There are NO open positions
   if (openPositions.length == 0) {
     if (last < penu) {
       onBuySignal(price, new Date().getTime());

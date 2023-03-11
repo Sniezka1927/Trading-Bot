@@ -1,4 +1,6 @@
 const strategy = require("../strategy/strategy");
+const { totalProfit } = require("../utils/calculateProfit");
+const colors = require("colors");
 const backtester = async (candlesticks) => {
   try {
     Promise.all(
