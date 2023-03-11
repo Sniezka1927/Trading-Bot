@@ -4,6 +4,8 @@ const program = require("commander");
 const historicalService = require("./src/historicalService/historicalService");
 const colors = require("colors");
 const backtester = require("./src/backtester/backtester");
+const { live, timestamp } = require("./config.json");
+
 const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 0;
 const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 1;
 
@@ -12,7 +14,7 @@ program
   .option(
     "-i, --interval <interval>",
     "Interval in seconds for candlesticks",
-    3600
+    timestamp
   )
   .option("-p, --product <product>", "Product identifier", "BTC-USDT")
   .option("-s, --start <start>", "Start time in unix seconds", endTime)
@@ -28,12 +30,9 @@ const apiURL = process.env.API_URL;
 const main = async () => {
   const options = program.opts();
   const { interval, product, start, end } = options;
-  const message = colors.magenta(
-    `Analyzing Chart from ${new Date(start)} - ${new Date(end)}`
-  );
-  console.log(message);
-  const candlesticks = await historicalService(start, end, interval, product);
-  await backtester(candlesticks);
+  if (!live) {
+    await backtester(interval, product, start, end);
+  }
 };
 
 main();
