@@ -5,6 +5,10 @@ const { calculateProfit } = require("../utils/calculateProfit");
 const randomstring = require("randomstring");
 const colors = require("colors");
 
+// indicators
+const stochasticRSI = require("./rsi");
+const sma = require("./sma");
+
 let positions = {};
 
 const strategy = (candlesticks) => {
@@ -20,20 +24,19 @@ const positionOpened = async (price, time, size, id) => {
 
 const positionClosed = async (price, time, amount, id) => {
   const position = positions[id];
-  const { profit, totalProfit, percentage, totalPercentage } = calculateProfit(
-    position.trade.enter,
-    price
-  );
+  const { profit, totalProfit, /*percentage, totalPercentage,*/ enter, exit } =
+    calculateProfit(position.trade.enter, price);
   const message = colors.cyan(
-    `Enter: ${position.trade.enter} | ${
-      position.trade.time
-    } | Exit: ${price.toFixed(2)} | Trade Profit: ${Number(profit).toFixed(
+    `Enter: ${enter.toFixed(2)} | ${position.trade.time} | Exit: ${exit.toFixed(
       2
-    )}$ | Percentage: ${percentage.toFixed(
+    )} | Trade Profit: ${Number(profit).toFixed(
       2
-    )}% | Total Profit:${(+totalProfit).toFixed(
-      2
-    )}$ | Total Percentages: ${totalPercentage.toFixed(2)}%`
+    )}$ | Total Profit:${(+totalProfit).toFixed(2)}$`
+    // $ | Total Percentages: ${totalPercentage.toFixed(2)}%`
+
+    // $ | Percentage: ${percentage.toFixed(
+    //   2
+    // )}%
   );
   console.log(message);
   if (position) {
@@ -56,12 +59,16 @@ const run = async (sticks) => {
   const len = sticks.length;
 
   // need atleast 20 candlesticks to begin to run
-  if (len < 20) return;
+  if (len < 5) return;
 
   const penu = sticks[len - 2].close;
   const last = sticks[len - 1].close;
   const price = last;
 
+  // stochasticRSI(sticks);
+  // sma(sticks);
+
+  /*
   // filtereing open positions
   let openKeys = Object.keys(positions);
   let AllPositionsArr = openKeys.map((k) => {
@@ -80,6 +87,7 @@ const run = async (sticks) => {
       });
     }
   }
+  */
 };
 
 module.exports = strategy;
