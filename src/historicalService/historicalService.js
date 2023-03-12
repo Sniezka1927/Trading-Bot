@@ -9,7 +9,7 @@ const historicalService = async (start, end, interval, product) => {
     granularity: interval,
   });
   const candlesticks = results.map((r) => createCandlesticks(r, interval));
-  return candlesticks;
+  return candlesticks.reverse();
 };
 
 module.exports = historicalService;

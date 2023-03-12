@@ -12,7 +12,7 @@ const backtester = async (interval, product, start, end) => {
     Promise.all(
       candlesticks.map(async (stick, index) => {
         const sticks = candlesticks.slice(0, index + 1);
-        await strategy(sticks);
+        strategy(sticks);
       })
     );
   } catch (err) {

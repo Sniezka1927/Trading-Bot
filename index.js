@@ -6,8 +6,8 @@ const colors = require("colors");
 const backtester = require("./src/backtester/backtester");
 const { live, timestamp } = require("./config.json");
 
-const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 0;
-const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 1;
+const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 2;
+const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 3;
 
 program
   .version("1.0.0")
