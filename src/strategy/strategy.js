@@ -4,6 +4,7 @@ const positionModel = require("../models/position");
 const { calculateProfit } = require("../utils/calculateProfit");
 const randomstring = require("randomstring");
 const colors = require("colors");
+const { stoploss, maxLossPercentage } = require("../../config.json");
 
 // indicators
 const stochasticRSI = require("./rsi");
@@ -14,7 +15,6 @@ const bb = require("./bb");
 let positions = {};
 
 const strategy = (candlesticks) => {
-  // simple strategy
   run(candlesticks);
 };
 
@@ -34,16 +34,20 @@ const positionClosed = async (price, time, amount, id) => {
       ? colors.cyan(
           `Enter: ${enter.toFixed(2)} | ${new Date(
             position.trade.time * 1e3
-          )} | Exit: ${exit.toFixed(2)} | Trade Profit: ${Number(
-            profit
-          ).toFixed(2)}$`
+          ).toLocaleDateString()} ${new Date(
+            position.trade.time * 1e3
+          ).toLocaleTimeString()} | Exit: ${exit.toFixed(
+            2
+          )} | Trade Profit: ${Number(profit).toFixed(2)}$`
         )
       : colors.cyan(
           `Enter: ${enter.toFixed(2)} | ${new Date(
             position.trade.time * 1e3
-          )} | Exit: ${exit.toFixed(2)} | Trade Loss: ${Number(profit).toFixed(
+          ).toLocaleDateString()} ${new Date(
+            position.trade.time * 1e3
+          ).toLocaleTimeString()} | Exit: ${exit.toFixed(
             2
-          )}$`
+          )} | Trade Loss: ${Number(profit).toFixed(2)}$`
         );
 
   const totalProfitMessage =
@@ -90,6 +94,11 @@ const run = async (sticks) => {
   const rsiBuy = rsiSignals.rsiBuy;
   const rsiSell = rsiSignals.rsiSell;
 
+  const smaSignals = await sma(sticks);
+  if (smaSignals === undefined) return;
+  const smaBuy = smaSignals.smaBuy;
+  const smaSell = smaSignals.smaSell;
+
   // filtereing open positions
   let openKeys = Object.keys(positions);
   let AllPositionsArr = openKeys.map((k) => {
@@ -98,28 +107,26 @@ const run = async (sticks) => {
   let openPositions = AllPositionsArr.filter((p) => p.state === "open");
 
   if (openPositions.length == 0) {
-    if (macdBuy && rsiBuy) {
+    if (macdBuy && rsiBuy && smaBuy) {
       onBuySignal(price, timestamp);
     }
   } else {
-    if (macdSell || rsiSell) {
-      openPositions.forEach((p) => {
+    openPositions.forEach((p) => {
+      // If signals are predicting trend reversal
+      if (macdSell && rsiSell && smaSell) {
         onSellSignal(price, (size = p.trade.size), timestamp, p);
-      });
-    }
+      }
+      // Take profit when it goes to setted win
+      if (p.trade.enter * 1.05 <= price) {
+        onSellSignal(price, (size = p.trade.size), timestamp, p);
+      }
+      // Stop loss
+      if (stoploss)
+        if (p.trade.enter * 0.985 > price) {
+          onSellSignal(price, (size = p.trade.size), timestamp, p);
+        }
+    });
   }
-  // Simple Strategy
-  // if (openPositions.length == 0) {
-  //   if (last < penu) {
-  //     onBuySignal(price, new Date().getTime());
-  //   }
-  // } else {
-  //   if (last > penu) {
-  //     openPositions.forEach((p) => {
-  //       onSellSignal(price, (size = p.trade.size), new Date().getTime(), p);
-  //     });
-  //   }
-  // }
 };
 
 module.exports = strategy;

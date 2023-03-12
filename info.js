@@ -1,2 +1,2 @@
 const tulind = require("tulind");
-console.log(tulind.indicators.stochrsi);
+console.log(tulind.indicators.sma);

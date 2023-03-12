@@ -1,6 +1,6 @@
 const tulind = require("tulind");
-const colors = require("colors");
 const average = require("../utils/average");
+
 const stochasticRSI = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
     average(stick.close, stick.high, stick.low)

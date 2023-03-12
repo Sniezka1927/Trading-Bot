@@ -1,4 +1,6 @@
 {
-  "timestamp": 300,
-  "live": false
+  "timestamp": 900,
+  "live": false,
+  "stoploss": true,
+  "maxLossPercentage": 0.05
 }

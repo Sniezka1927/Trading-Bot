@@ -3,7 +3,11 @@ const historicalService = require("../historicalService/historicalService");
 const colors = require("colors");
 const backtester = async (interval, product, start, end) => {
   const message = colors.magenta(
-    `Analyzing Chart from ${new Date(start)} - ${new Date(end)}`
+    `Analyzing Chart from ${new Date(start).toLocaleDateString()} ${new Date(
+      start
+    ).toLocaleTimeString()} - ${new Date(end).toLocaleDateString()} ${new Date(
+      end
+    ).toLocaleTimeString()}`
   );
   console.log(message);
   const candlesticks = await historicalService(start, end, interval, product);
