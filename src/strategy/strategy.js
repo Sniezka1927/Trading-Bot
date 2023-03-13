@@ -26,34 +26,67 @@ const positionOpened = async (price, time, size, id) => {
 
 const positionClosed = async (price, size, time, id) => {
   const position = positions[id];
-  const { profit, totalProfit, percentage, totalPercentage, enter, exit } =
-    calculateProfit(position.trade.enter, price);
+  if (position.type === "long") {
+    const open = position.trade.enter;
+    const close = price;
+    const { profit, totalProfit, percentage, totalPercentage, enter, exit } =
+      calculateProfit(open, close, "long");
+    alertClosePostion(
+      enter,
+      exit,
+      time,
+      profit,
+      totalProfit,
+      percentage,
+      totalPercentage,
+      "LONG"
+    );
+  } else if (position.type === "short") {
+    const open = position.trade.enter;
+    const close = price;
+    const { profit, totalProfit, percentage, totalPercentage, enter, exit } =
+      calculateProfit(open, close, "short");
+    alertClosePostion(
+      enter,
+      exit,
+      time,
+      profit,
+      totalProfit,
+      percentage,
+      totalPercentage,
+      "SHORT"
+    );
+  }
 
-  const message =
-    Number(profit) > 0
-      ? colors.cyan(
-          `Enter: ${enter.toFixed(2)} | ${new Date(
-            time * 1e3
-          ).toLocaleDateString()} ${new Date(
-            time * 1e3
-          ).toLocaleTimeString()} | Exit: ${exit.toFixed(
-            2
-          )} | Trade Profit: ${Number(profit).toFixed(2)}$`
-        )
-      : colors.cyan(
-          `Enter: ${enter.toFixed(2)} | ${new Date(
-            time * 1e3
-          ).toLocaleDateString()} ${new Date(
-            time * 1e3
-          ).toLocaleTimeString()} | Exit: ${exit.toFixed(
-            2
-          )} | Trade Loss: ${Number(profit).toFixed(2)}$`
-        );
+  if (position) {
+    positions[id].state = "closed";
+  }
+};
+
+const alertClosePostion = (
+  enter,
+  exit,
+  time,
+  profit,
+  totalProfit,
+  percentage,
+  totalPercentage,
+  type
+) => {
+  const message = colors.cyan(
+    `Type: ${type} | Enter: ${enter.toFixed(2)} | ${new Date(
+      time * 1e3
+    ).toLocaleDateString()} ${new Date(
+      time * 1e3
+    ).toLocaleTimeString()} | Exit: ${exit.toFixed(2)} | Trade Profit: ${Number(
+      profit
+    ).toFixed(2)}$ | Percentage: ${percentage}%`
+  );
 
   const totalProfitMessage =
     totalProfit > 0
       ? colors.green(
-          `Total Profit:${(+totalProfit).toFixed(
+          `Total Profit: ${(+totalProfit).toFixed(
             2
           )}$ | Total percentage: ${totalPercentage}%`
         )
@@ -65,24 +98,62 @@ const positionClosed = async (price, size, time, id) => {
 
   console.log(message);
   console.log(totalProfitMessage);
-  if (position) {
-    positions[id].state = "closed";
-  }
 };
 
 const onBuySignal = async (price, time) => {
   const message = colors.yellow(
-    `Buying at ${price}$ | ${new Date(
+    `Longing at ${price}$ | ${new Date(
       time * 1e3
     ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()}`
   );
   console.log(message);
   const id = randomstring.generate(20);
   positionOpened(price, time, 1.0, id);
+  openLongPosition(price, time, 1.0, id);
 };
 
-const onSellSignal = async (price, size, time, position) => {
-  positionClosed(price, size, time, (id = position.trade.id));
+const onSellSignal = async (price, time) => {
+  const message = colors.yellow(
+    `Shorting at ${price}$ | ${new Date(
+      time * 1e3
+    ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()}`
+  );
+  console.log(message);
+  const id = randomstring.generate(20);
+  closePositions("long", price, time);
+  openShortPosition(price, time, 1.0, id);
+};
+
+const openLongPosition = (price, time, size, id) => {
+  const trade = tradeModel(price, time, size, id);
+  const position = positionModel(trade, "long");
+  positions[id] = position;
+  closePositions("short", price, time);
+};
+
+const openShortPosition = (price, time, size, id) => {
+  const trade = tradeModel(price, time, size, id);
+  const position = positionModel(trade, "short");
+  positions[id] = position;
+  closePositions("long", price, time);
+};
+
+const closePositions = async (type, price, time) => {
+  const openPositions = await filterPositions(type);
+  openPositions.forEach(async (p) => {
+    await positionClosed(price, (size = p.trade.size), time, p.trade.id);
+  });
+};
+
+const filterPositions = (type) => {
+  let openKeys = Object.keys(positions);
+  let AllPositionsArr = openKeys.map((k) => {
+    return positions[k];
+  });
+  let openPositions = AllPositionsArr.filter(
+    (p) => p.state === "open" && p.type === type
+  );
+  return openPositions;
 };
 
 const run = async (sticks) => {
@@ -116,13 +187,8 @@ const run = async (sticks) => {
   const bbSell = bbandsSignals.bbSell;
 
   // filtereing open positions
-  let openKeys = Object.keys(positions);
-  let AllPositionsArr = openKeys.map((k) => {
-    return positions[k];
-  });
-  let openPositions = AllPositionsArr.filter((p) => p.state === "open");
 
-  detectFutures(
+  const positionType = detectFutures(
     macdBuy,
     rsiBuy,
     smaBuy,
@@ -135,27 +201,33 @@ const run = async (sticks) => {
     timestamp
   );
 
-  if (openPositions.length == 0) {
-    if (rsiBuy && macdBuy && smaBuy) {
-      onBuySignal(price, timestamp);
-    }
-  } else {
-    openPositions.forEach((p) => {
-      // If signals are predicting trend reversal
-      if (macdSell && rsiSell && smaSell) {
-        onSellSignal(price, (size = p.trade.size), timestamp, p);
-      }
-      // Take profit when it goes to setted win
-      if (p.trade.enter * 1.02 <= price) {
-        onSellSignal(price, (size = p.trade.size), timestamp, p);
-      }
-      // Stoploss
-      if (stoploss)
-        if (p.trade.enter * 0.9 > price) {
-          onSellSignal(price, (size = p.trade.size), timestamp, p);
-        }
-    });
+  if (positionType === "long") {
+    onBuySignal(price, timestamp);
+  } else if (positionType === "short") {
+    onSellSignal(price, timestamp);
   }
+
+  // if (openPositions.length == 0) {
+  //   if (rsiBuy && macdBuy && smaBuy) {
+  //     onBuySignal(price, timestamp);
+  //   }
+  // } else {
+  //   openPositions.forEach((p) => {
+  //     // If signals are predicting trend reversal
+  //     if (macdSell && rsiSell && smaSell) {
+  //       onSellSignal(price, (size = p.trade.size), timestamp, p);
+  //     }
+  //     // Take profit when it goes to setted win
+  //     if (p.trade.enter * 1.02 <= price) {
+  //       onSellSignal(price, (size = p.trade.size), timestamp, p);
+  //     }
+  //     // Stoploss
+  //     if (stoploss)
+  //       if (p.trade.enter * 0.9 > price) {
+  //         onSellSignal(price, (size = p.trade.size), timestamp, p);
+  //       }
+  //   });
+  // }
 };
 
 const detectFutures = (
@@ -170,7 +242,7 @@ const detectFutures = (
   price,
   time
 ) => {
-  if (rsiBuy && macdBuy && smaBuy)
+  if (rsiBuy && macdBuy && smaBuy) {
     console.log(
       "Looks like we found a nice place to long!",
       price,
@@ -178,7 +250,8 @@ const detectFutures = (
         time * 1e3
       ).toLocaleTimeString()}`
     );
-  else if (macdSell && smaSell)
+    return "long";
+  } else if (macdSell && smaSell) {
     // && rsiSell
     console.log(
       `That's a chance to short!`,
@@ -187,6 +260,8 @@ const detectFutures = (
         time * 1e3
       ).toLocaleTimeString()}`
     );
+    return "short";
+  }
 };
 
 module.exports = strategy;
