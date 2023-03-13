@@ -4,6 +4,6 @@
   "stoploss": true,
   "maxLossPercentage": 12,
   "balance": 100,
-  "maxInvextPercentage": 50,
-  "leverage": 5
+  "maxInvextPercentage": 20,
+  "leverage": 2
 }

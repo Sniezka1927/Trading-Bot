@@ -20,6 +20,8 @@ const calculatePercentage = require("../utils/calculatePercent");
 
 let positions = {};
 let currentBalance = balance;
+let wins = 0;
+let loses = 0;
 
 const strategy = (candlesticks) => {
   run(candlesticks);
@@ -42,6 +44,7 @@ const positionClosed = async (price, size, time, id) => {
       percentage,
       totalPercentage,
       size,
+      position.trade.amount,
       "LONG"
     );
   } else if (position.type === "short") {
@@ -58,6 +61,7 @@ const positionClosed = async (price, size, time, id) => {
       percentage,
       totalPercentage,
       size,
+      position.trade.amount,
       "SHORT"
     );
   }
@@ -76,8 +80,11 @@ const alertClosePostion = (
   percentage,
   totalPercentage,
   size,
+  amount,
   type
 ) => {
+  if (profit > 0) wins++;
+  else loses++;
   const message = colors.cyan(
     `Type: ${type} | Enter: ${enter.toFixed(2)} | ${new Date(
       time * 1e3
@@ -85,12 +92,11 @@ const alertClosePostion = (
       time * 1e3
     ).toLocaleTimeString()} | Exit: ${exit.toFixed(
       2
-    )} | Size: ${size} | Trade Profit: ${Number(profit).toFixed(
-      2
-    )}$ | Percentage: ${percentage}%`
+    )}| Amount: ${amount}$ | Size: ${size} | Trade Profit: ${Number(
+      profit
+    ).toFixed(2)}$ | Percentage: ${percentage}%`
   );
 
-  console.log(profit);
   currentBalance = +balance + +totalProfit;
 
   const totalProfitMessage =
@@ -100,14 +106,18 @@ const alertClosePostion = (
             2
           )}$ | Total Profit: ${(+totalProfit).toFixed(
             2
-          )}$ | Total percentage: ${totalPercentage.toFixed(2)}%`
+          )}$ | Total percentage: ${totalPercentage.toFixed(
+            2
+          )}% | Wins: ${wins} | Loses: ${loses}`
         )
       : colors.red(
           `Balance ${Number(currentBalance).toFixed(
             2
           )} |Total Loss:${(+totalProfit).toFixed(
             2
-          )}$  | Total percentage: ${totalPercentage.toFixed(2)}%`
+          )}$  | Total percentage: ${totalPercentage.toFixed(
+            2
+          )}% | Wins: ${wins} | Loses: ${loses}`
         );
 
   console.log(message);
@@ -178,17 +188,16 @@ const scanPositions = async (price, time) => {
   longPositions.forEach(async (p) => {
     const percentage = calculatePercentage(p.trade.enter, price, "long");
     if (percentage <= -maxLossPercentage) {
-      console.log("closing long!");
-      console.log(p.trade.enter, price, percentage);
+      const message = colors.red("Stop loss!");
+      console.log(message);
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
   shortPositions.forEach(async (p) => {
     const percentage = calculatePercentage(p.trade.enter, price, "short");
-
     if (percentage <= -maxLossPercentage) {
-      console.log("closing short!");
-      console.log(p.trade.enter, price, percentage);
+      const message = colors.red("Stop loss!");
+      console.log(message);
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
