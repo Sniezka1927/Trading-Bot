@@ -2,8 +2,8 @@
   "timestamp": 300,
   "live": false,
   "stoploss": true,
-  "maxLossPercentage": 12,
+  "maxLossPercentage": 5,
   "balance": 100,
-  "maxInvextPercentage": 20,
+  "maxInvextPercentage": 50,
   "leverage": 2
 }

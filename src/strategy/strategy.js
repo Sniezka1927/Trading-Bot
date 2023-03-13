@@ -22,6 +22,7 @@ let positions = {};
 let currentBalance = balance;
 let wins = 0;
 let loses = 0;
+let stoplosses = 0;
 
 const strategy = (candlesticks) => {
   run(candlesticks);
@@ -108,7 +109,7 @@ const alertClosePostion = (
             2
           )}$ | Total percentage: ${totalPercentage.toFixed(
             2
-          )}% | Wins: ${wins} | Loses: ${loses}`
+          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses}`
         )
       : colors.red(
           `Balance ${Number(currentBalance).toFixed(
@@ -117,7 +118,7 @@ const alertClosePostion = (
             2
           )}$  | Total percentage: ${totalPercentage.toFixed(
             2
-          )}% | Wins: ${wins} | Loses: ${loses}`
+          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses}`
         );
 
   console.log(message);
@@ -190,6 +191,7 @@ const scanPositions = async (price, time) => {
     if (percentage <= -maxLossPercentage) {
       const message = colors.red("Stop loss!");
       console.log(message);
+      stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
@@ -198,6 +200,7 @@ const scanPositions = async (price, time) => {
     if (percentage <= -maxLossPercentage) {
       const message = colors.red("Stop loss!");
       console.log(message);
+      stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
