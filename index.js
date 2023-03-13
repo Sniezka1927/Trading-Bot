@@ -4,9 +4,9 @@ const program = require("commander");
 const backtester = require("./src/backtester/backtester");
 const { live, timestamp } = require("./config.json");
 
-const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 0;
-const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * 3;
-
+const unixDay = 24 * 60 * 60 * 1e3;
+const startTime = new Date().getTime() - unixDay;
+const endTime = new Date().getTime() - unixDay * 1;
 program
   .version("1.0.0")
   .option(
@@ -38,7 +38,11 @@ const main = async () => {
   const options = program.opts();
   const { interval, product, start, end } = options;
   if (!live) {
-    await backtester(interval, product, start, end);
+    for (let i = 90; i >= 0; i--) {
+      const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * (i + 1);
+      const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * i;
+      await backtester(interval, product, startTime, endTime);
+    }
   }
 };
 

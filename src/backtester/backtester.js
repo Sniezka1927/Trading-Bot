@@ -7,7 +7,7 @@ const backtester = async (interval, product, start, end) => {
       start
     ).toLocaleTimeString()} - ${new Date(end).toLocaleDateString()} ${new Date(
       end
-    ).toLocaleTimeString()}`
+    ).toLocaleTimeString()}\nPair: ${product}\ngranuality: ${interval / 60}min`
   );
   console.log(message);
   const candlesticks = await historicalService(start, end, interval, product);

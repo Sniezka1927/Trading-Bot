@@ -10,7 +10,7 @@ const { stoploss, maxLossPercentage } = require("../../config.json");
 const stochasticRSI = require("./rsi");
 const sma = require("./sma");
 const macd = require("./macd");
-const bb = require("./bb");
+const bbands = require("./bbands");
 
 let positions = {};
 
@@ -24,27 +24,27 @@ const positionOpened = async (price, time, size, id) => {
   positions[id] = position;
 };
 
-const positionClosed = async (price, time, amount, id) => {
+const positionClosed = async (price, size, time, id) => {
   const position = positions[id];
-  const { profit, totalProfit, /*percentage, totalPercentage,*/ enter, exit } =
+  const { profit, totalProfit, percentage, totalPercentage, enter, exit } =
     calculateProfit(position.trade.enter, price);
 
   const message =
     Number(profit) > 0
       ? colors.cyan(
           `Enter: ${enter.toFixed(2)} | ${new Date(
-            position.trade.time * 1e3
+            time * 1e3
           ).toLocaleDateString()} ${new Date(
-            position.trade.time * 1e3
+            time * 1e3
           ).toLocaleTimeString()} | Exit: ${exit.toFixed(
             2
           )} | Trade Profit: ${Number(profit).toFixed(2)}$`
         )
       : colors.cyan(
           `Enter: ${enter.toFixed(2)} | ${new Date(
-            position.trade.time * 1e3
+            time * 1e3
           ).toLocaleDateString()} ${new Date(
-            position.trade.time * 1e3
+            time * 1e3
           ).toLocaleTimeString()} | Exit: ${exit.toFixed(
             2
           )} | Trade Loss: ${Number(profit).toFixed(2)}$`
@@ -52,8 +52,16 @@ const positionClosed = async (price, time, amount, id) => {
 
   const totalProfitMessage =
     totalProfit > 0
-      ? colors.green(`Total Profit:${(+totalProfit).toFixed(2)}$`)
-      : colors.red(`Total Loss:${(+totalProfit).toFixed(2)}$`);
+      ? colors.green(
+          `Total Profit:${(+totalProfit).toFixed(
+            2
+          )}$ | Total percentage: ${totalPercentage}%`
+        )
+      : colors.red(
+          `Total Loss:${(+totalProfit).toFixed(
+            2
+          )}$  | Total percentage: ${totalPercentage}%`
+        );
 
   console.log(message);
   console.log(totalProfitMessage);
@@ -63,7 +71,11 @@ const positionClosed = async (price, time, amount, id) => {
 };
 
 const onBuySignal = async (price, time) => {
-  const message = colors.yellow(`Buying at ${price}`);
+  const message = colors.yellow(
+    `Buying at ${price}$ | ${new Date(
+      time * 1e3
+    ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()}`
+  );
   console.log(message);
   const id = randomstring.generate(20);
   positionOpened(price, time, 1.0, id);
@@ -77,9 +89,8 @@ const run = async (sticks) => {
   const len = sticks.length;
 
   // Amount of Candlesticks needed to begin run
-  if (len < 12) return;
+  if (len < 5) return;
 
-  const penu = sticks[len - 2].close;
   const last = sticks[len - 1].close;
   const timestamp = sticks[len - 1].time;
   const price = last;
@@ -99,6 +110,11 @@ const run = async (sticks) => {
   const smaBuy = smaSignals.smaBuy;
   const smaSell = smaSignals.smaSell;
 
+  const bbandsSignals = await bbands(sticks);
+  if (bbandsSignals === undefined) return;
+  const bbBuy = bbandsSignals.bbBuy;
+  const bbSell = bbandsSignals.bbSell;
+
   // filtereing open positions
   let openKeys = Object.keys(positions);
   let AllPositionsArr = openKeys.map((k) => {
@@ -106,8 +122,21 @@ const run = async (sticks) => {
   });
   let openPositions = AllPositionsArr.filter((p) => p.state === "open");
 
+  detectFutures(
+    macdBuy,
+    rsiBuy,
+    smaBuy,
+    macdSell,
+    rsiSell,
+    smaSell,
+    bbBuy,
+    bbSell,
+    price,
+    timestamp
+  );
+
   if (openPositions.length == 0) {
-    if (macdBuy && rsiBuy && smaBuy) {
+    if (rsiBuy && macdBuy && smaBuy) {
       onBuySignal(price, timestamp);
     }
   } else {
@@ -117,16 +146,47 @@ const run = async (sticks) => {
         onSellSignal(price, (size = p.trade.size), timestamp, p);
       }
       // Take profit when it goes to setted win
-      if (p.trade.enter * 1.05 <= price) {
+      if (p.trade.enter * 1.02 <= price) {
         onSellSignal(price, (size = p.trade.size), timestamp, p);
       }
-      // Stop loss
+      // Stoploss
       if (stoploss)
-        if (p.trade.enter * 0.985 > price) {
+        if (p.trade.enter * 0.9 > price) {
           onSellSignal(price, (size = p.trade.size), timestamp, p);
         }
     });
   }
+};
+
+const detectFutures = (
+  macdBuy,
+  rsiBuy,
+  smaBuy,
+  macdSell,
+  rsiSell,
+  smaSell,
+  bbBuy,
+  bbSell,
+  price,
+  time
+) => {
+  if (rsiBuy && macdBuy && smaBuy)
+    console.log(
+      "Looks like we found a nice place to long!",
+      price,
+      `${new Date(time * 1e3).toLocaleDateString()} ${new Date(
+        time * 1e3
+      ).toLocaleTimeString()}`
+    );
+  else if (macdSell && smaSell)
+    // && rsiSell
+    console.log(
+      `That's a chance to short!`,
+      price,
+      `${new Date(time * 1e3).toLocaleDateString()} ${new Date(
+        time * 1e3
+      ).toLocaleTimeString()}`
+    );
 };
 
 module.exports = strategy;

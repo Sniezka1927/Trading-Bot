@@ -17,8 +17,6 @@ const sma = async (candlesticks) => {
   const lastSMA = sma[sma.length - 1];
   const isAbove = penultimate < lastSMA && lastSMA < last;
   const isBelow = penultimate > lastSMA && lastSMA > last;
-  // if (isAbove) console.log(`${penultimate} ${lastSMA} ${last} BUY`);
-  // else if (isBelow) console.log(`${penultimate} ${lastSMA} ${last} SELL`);
   return { smaBuy: isAbove, smaSell: isBelow };
 };
 
