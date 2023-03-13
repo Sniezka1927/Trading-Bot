@@ -12,7 +12,7 @@ const stochasticRSI = async (candlesticks) => {
   const length = stochrsi.length;
   if (length < 2) return;
   const last = stochrsi[length - 1];
-  const sellBreakpoint = 70;
+  const sellBreakpoint = 50;
   const buyBreakpoint = 40;
   const sellSignal = last > sellBreakpoint;
   const buySignal = last < buyBreakpoint;

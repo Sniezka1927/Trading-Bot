@@ -206,29 +206,11 @@ const run = async (sticks) => {
   } else if (positionType === "short") {
     onSellSignal(price, timestamp);
   }
-
-  // if (openPositions.length == 0) {
-  //   if (rsiBuy && macdBuy && smaBuy) {
-  //     onBuySignal(price, timestamp);
-  //   }
-  // } else {
-  //   openPositions.forEach((p) => {
-  //     // If signals are predicting trend reversal
-  //     if (macdSell && rsiSell && smaSell) {
-  //       onSellSignal(price, (size = p.trade.size), timestamp, p);
-  //     }
-  //     // Take profit when it goes to setted win
-  //     if (p.trade.enter * 1.02 <= price) {
-  //       onSellSignal(price, (size = p.trade.size), timestamp, p);
-  //     }
-  //     // Stoploss
-  //     if (stoploss)
-  //       if (p.trade.enter * 0.9 > price) {
-  //         onSellSignal(price, (size = p.trade.size), timestamp, p);
-  //       }
-  //   });
-  // }
 };
+
+if (stoploss) {
+  // close positions
+}
 
 const detectFutures = (
   macdBuy,
@@ -242,7 +224,8 @@ const detectFutures = (
   price,
   time
 ) => {
-  if (rsiBuy && macdBuy && smaBuy) {
+  if (macdBuy && smaBuy) {
+    // rsiBuy &&
     console.log(
       "Looks like we found a nice place to long!",
       price,
