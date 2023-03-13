@@ -1,5 +1,5 @@
 const tulind = require("tulind");
-const average = require("../utils/average");
+const average = require("../../utils/average");
 const sma = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
     average(stick.close, stick.high, stick.low)

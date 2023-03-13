@@ -38,7 +38,7 @@ const main = async () => {
   const options = program.opts();
   const { interval, product, start, end } = options;
   if (!live) {
-    for (let i = 60; i >= 0; i--) {
+    for (let i = 365; i >= 0; i--) {
       const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * (i + 1);
       const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * i;
       await backtester(interval, product, startTime, endTime);

@@ -1,5 +1,5 @@
 const tulind = require("tulind");
-const average = require("../utils/average");
+const average = require("../../utils/average");
 
 const stochasticRSI = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
@@ -12,7 +12,7 @@ const stochasticRSI = async (candlesticks) => {
   const length = stochrsi.length;
   if (length < 2) return;
   const last = stochrsi[length - 1];
-  const sellBreakpoint = 50;
+  const sellBreakpoint = 60;
   const buyBreakpoint = 40;
   const sellSignal = last > sellBreakpoint;
   const buySignal = last < buyBreakpoint;

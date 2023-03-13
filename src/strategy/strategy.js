@@ -4,15 +4,22 @@ const positionModel = require("../models/position");
 const { calculateProfit } = require("../utils/calculateProfit");
 const randomstring = require("randomstring");
 const colors = require("colors");
-const { stoploss, maxLossPercentage } = require("../../config.json");
+const {
+  stoploss,
+  maxLossPercentage,
+  balance,
+  maxInvextPercentage,
+} = require("../../config.json");
 
 // indicators
-const stochasticRSI = require("./rsi");
-const sma = require("./sma");
-const macd = require("./macd");
-const bbands = require("./bbands");
+const stochasticRSI = require("./indicators/rsi");
+const sma = require("./indicators/sma");
+const macd = require("./indicators/macd");
+const bbands = require("./indicators/bbands");
 
 let positions = {};
+let currentBalance = balance;
+let tradeAmount = currentBalance * (maxInvextPercentage / 100);
 
 const strategy = (candlesticks) => {
   run(candlesticks);
@@ -21,16 +28,18 @@ const strategy = (candlesticks) => {
 const positionOpened = async (price, time, size, id) => {
   const trade = tradeModel(price, time, size, id);
   const position = positionModel(trade, trade.id);
+  console.log(position);
   positions[id] = position;
 };
 
 const positionClosed = async (price, size, time, id) => {
   const position = positions[id];
+  if (position.state === "closed") return;
   if (position.type === "long") {
     const open = position.trade.enter;
     const close = price;
     const { profit, totalProfit, percentage, totalPercentage, enter, exit } =
-      calculateProfit(open, close, "long");
+      calculateProfit(open, close, size, "long");
     alertClosePostion(
       enter,
       exit,
@@ -39,13 +48,14 @@ const positionClosed = async (price, size, time, id) => {
       totalProfit,
       percentage,
       totalPercentage,
+      size,
       "LONG"
     );
   } else if (position.type === "short") {
     const open = position.trade.enter;
     const close = price;
     const { profit, totalProfit, percentage, totalPercentage, enter, exit } =
-      calculateProfit(open, close, "short");
+      calculateProfit(open, close, size, "short");
     alertClosePostion(
       enter,
       exit,
@@ -54,6 +64,7 @@ const positionClosed = async (price, size, time, id) => {
       totalProfit,
       percentage,
       totalPercentage,
+      size,
       "SHORT"
     );
   }
@@ -71,6 +82,7 @@ const alertClosePostion = (
   totalProfit,
   percentage,
   totalPercentage,
+  size,
   type
 ) => {
   const message = colors.cyan(
@@ -78,22 +90,31 @@ const alertClosePostion = (
       time * 1e3
     ).toLocaleDateString()} ${new Date(
       time * 1e3
-    ).toLocaleTimeString()} | Exit: ${exit.toFixed(2)} | Trade Profit: ${Number(
-      profit
-    ).toFixed(2)}$ | Percentage: ${percentage}%`
+    ).toLocaleTimeString()} | Exit: ${exit.toFixed(
+      2
+    )} | Size: ${size} | Trade Profit: ${Number(profit).toFixed(
+      2
+    )}$ | Percentage: ${percentage}%`
   );
 
+  console.log(profit);
+  currentBalance = +balance + +totalProfit;
+
   const totalProfitMessage =
-    totalProfit > 0
+    currentBalance > balance
       ? colors.green(
-          `Total Profit: ${(+totalProfit).toFixed(
+          `Balance ${Number(currentBalance).toFixed(
             2
-          )}$ | Total percentage: ${totalPercentage}%`
+          )}$ | Total Profit: ${(+totalProfit).toFixed(
+            2
+          )}$ | Total percentage: ${totalPercentage.toFixed(2)}%`
         )
       : colors.red(
-          `Total Loss:${(+totalProfit).toFixed(
+          `Balance ${Number(currentBalance).toFixed(
             2
-          )}$  | Total percentage: ${totalPercentage}%`
+          )} |Total Loss:${(+totalProfit).toFixed(
+            2
+          )}$  | Total percentage: ${totalPercentage.toFixed(2)}%`
         );
 
   console.log(message);
@@ -101,27 +122,27 @@ const alertClosePostion = (
 };
 
 const onBuySignal = async (price, time) => {
+  const size = tradeAmount / price;
   const message = colors.yellow(
-    `Longing at ${price}$ | ${new Date(
+    `Longing at ${price}$ | Size ${size} |  ${new Date(
       time * 1e3
-    ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()}`
+    ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()} `
   );
   console.log(message);
   const id = randomstring.generate(20);
-  positionOpened(price, time, 1.0, id);
-  openLongPosition(price, time, 1.0, id);
+  openLongPosition(price, time, size, id);
 };
 
 const onSellSignal = async (price, time) => {
+  const size = tradeAmount / price;
   const message = colors.yellow(
-    `Shorting at ${price}$ | ${new Date(
+    `Shorting at ${price}$ | Size ${size} | ${new Date(
       time * 1e3
     ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()}`
   );
   console.log(message);
   const id = randomstring.generate(20);
-  closePositions("long", price, time);
-  openShortPosition(price, time, 1.0, id);
+  openShortPosition(price, time, size, id);
 };
 
 const openLongPosition = (price, time, size, id) => {
@@ -156,6 +177,24 @@ const filterPositions = (type) => {
   return openPositions;
 };
 
+const scanPositions = async (price, time) => {
+  const longPositions = filterPositions("long");
+  const shortPositions = filterPositions("short");
+  console.log("Scanning", longPositions.length + shortPositions.length);
+  longPositions.forEach(async (p) => {
+    console.log((price - p.trade.enter / p.trade.enter) * 100);
+    if ((price - p.trade.enter / p.trade.enter) * 100 <= 2) {
+      positionClosed(price, p.trade.size, time, p.trade.id);
+    }
+  });
+  shortPositions.forEach(async (p) => {
+    console.log(((p.trade.enter - price) / p.trade.enter) * 100);
+    if (((p.trade.enter - price) / p.trade.enter) * 100 <= -2) {
+      positionClosed(price, p.trade.size, time, p.trade.id);
+    }
+  });
+};
+
 const run = async (sticks) => {
   const len = sticks.length;
 
@@ -186,7 +225,11 @@ const run = async (sticks) => {
   const bbBuy = bbandsSignals.bbBuy;
   const bbSell = bbandsSignals.bbSell;
 
-  // filtereing open positions
+  if (stoploss) {
+    scanPositions(price, timestamp);
+  }
+
+  // price / maxBalanceInvestment
 
   const positionType = detectFutures(
     macdBuy,
@@ -208,10 +251,6 @@ const run = async (sticks) => {
   }
 };
 
-if (stoploss) {
-  // close positions
-}
-
 const detectFutures = (
   macdBuy,
   rsiBuy,
@@ -224,7 +263,7 @@ const detectFutures = (
   price,
   time
 ) => {
-  if (macdBuy && smaBuy) {
+  if (macdBuy && smaBuy && rsiBuy) {
     // rsiBuy &&
     console.log(
       "Looks like we found a nice place to long!",
