@@ -16,20 +16,13 @@ const stochasticRSI = require("./indicators/rsi");
 const sma = require("./indicators/sma");
 const macd = require("./indicators/macd");
 const bbands = require("./indicators/bbands");
+const calculatePercentage = require("../utils/calculatePercent");
 
 let positions = {};
 let currentBalance = balance;
-let tradeAmount = currentBalance * (maxInvextPercentage / 100);
 
 const strategy = (candlesticks) => {
   run(candlesticks);
-};
-
-const positionOpened = async (price, time, size, id) => {
-  const trade = tradeModel(price, time, size, id);
-  const position = positionModel(trade, trade.id);
-  console.log(position);
-  positions[id] = position;
 };
 
 const positionClosed = async (price, size, time, id) => {
@@ -122,6 +115,7 @@ const alertClosePostion = (
 };
 
 const onBuySignal = async (price, time) => {
+  const tradeAmount = currentBalance * (maxInvextPercentage / 100);
   const size = tradeAmount / price;
   const message = colors.yellow(
     `Longing at ${price}$ | Size ${size} |  ${new Date(
@@ -130,10 +124,11 @@ const onBuySignal = async (price, time) => {
   );
   console.log(message);
   const id = randomstring.generate(20);
-  openLongPosition(price, time, size, id);
+  openLongPosition(price, time, size, tradeAmount, id);
 };
 
 const onSellSignal = async (price, time) => {
+  const tradeAmount = currentBalance * (maxInvextPercentage / 100);
   const size = tradeAmount / price;
   const message = colors.yellow(
     `Shorting at ${price}$ | Size ${size} | ${new Date(
@@ -142,18 +137,18 @@ const onSellSignal = async (price, time) => {
   );
   console.log(message);
   const id = randomstring.generate(20);
-  openShortPosition(price, time, size, id);
+  openShortPosition(price, time, size, tradeAmount, id);
 };
 
-const openLongPosition = (price, time, size, id) => {
-  const trade = tradeModel(price, time, size, id);
+const openLongPosition = (price, time, size, amount, id) => {
+  const trade = tradeModel(price, time, size, amount, id);
   const position = positionModel(trade, "long");
   positions[id] = position;
   closePositions("short", price, time);
 };
 
-const openShortPosition = (price, time, size, id) => {
-  const trade = tradeModel(price, time, size, id);
+const openShortPosition = (price, time, size, amount, id) => {
+  const trade = tradeModel(price, time, size, amount, id);
   const position = positionModel(trade, "short");
   positions[id] = position;
   closePositions("long", price, time);
@@ -180,16 +175,20 @@ const filterPositions = (type) => {
 const scanPositions = async (price, time) => {
   const longPositions = filterPositions("long");
   const shortPositions = filterPositions("short");
-  console.log("Scanning", longPositions.length + shortPositions.length);
   longPositions.forEach(async (p) => {
-    console.log((price - p.trade.enter / p.trade.enter) * 100);
-    if ((price - p.trade.enter / p.trade.enter) * 100 <= 2) {
+    const percentage = calculatePercentage(p.trade.enter, price, "long");
+    if (percentage <= -maxLossPercentage) {
+      console.log("closing long!");
+      console.log(p.trade.enter, price, percentage);
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
   shortPositions.forEach(async (p) => {
-    console.log(((p.trade.enter - price) / p.trade.enter) * 100);
-    if (((p.trade.enter - price) / p.trade.enter) * 100 <= -2) {
+    const percentage = calculatePercentage(p.trade.enter, price, "short");
+
+    if (percentage <= -maxLossPercentage) {
+      console.log("closing short!");
+      console.log(p.trade.enter, price, percentage);
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });

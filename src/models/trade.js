@@ -1,10 +1,11 @@
-const tradeModel = (price, time, size, id) => {
+const tradeModel = (price, time, size, amount, id) => {
   return {
     state: "open",
     id: id,
     enter: price,
     time: time,
     size: size,
+    amount: amount,
   };
 };
 
