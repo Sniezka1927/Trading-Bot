@@ -1,4 +1,4 @@
-const { leverage } = require("../../config.json");
+const { leverage, exchangeFee } = require("../../config.json");
 const calculatePercentage = (enter, sell, type) => {
   if (type === "long") {
     return (((sell - enter) / enter) * 100 * leverage).toFixed(2);

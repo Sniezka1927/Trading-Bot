@@ -1,12 +1,11 @@
-const { leverage } = require("../../config.json");
+const { leverage, exchangeFee } = require("../../config.json");
 const calculatePercentage = require("./calculatePercent");
 let totalProfit = 0;
 let totalPercentages = 0;
 const calculateProfit = (enter, sell, size, type) => {
-  const fee = 0.004; // Coinbase Maker fee 0.004
   if (type === "long") {
-    const entrance = enter * (1 + fee); // 1 stand for amount
-    const exit = sell * (1 - fee); // 1 stand for amount
+    const entrance = enter * (1 + exchangeFee); // 1 stand for amount
+    const exit = sell * (1 - exchangeFee); // 1 stand for amount
     const profit = ((exit - entrance) * size * leverage).toFixed(2);
     totalProfit += +profit * leverage;
     const percentage = calculatePercentage(entrance, exit, "long");
@@ -20,8 +19,8 @@ const calculateProfit = (enter, sell, size, type) => {
       totalPercentage: totalPercentages,
     };
   } else if (type === "short") {
-    const entrance = enter * (1 + fee); // 1 stand for amount
-    const exit = sell * (1 - fee); // 1 stand for amount
+    const entrance = enter * (1 + exchangeFee); // 1 stand for amount
+    const exit = sell * (1 - exchangeFee); // 1 stand for amount
     const profit = ((entrance - exit) * size * leverage).toFixed(2);
     totalProfit += +profit * leverage;
     const percentage = calculatePercentage(entrance, exit, "short");

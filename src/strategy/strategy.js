@@ -9,6 +9,7 @@ const {
   maxLossPercentage,
   balance,
   maxInvextPercentage,
+  takeProfitPercentageBreakpoint,
 } = require("../../config.json");
 
 // indicators
@@ -200,6 +201,11 @@ const scanPositions = async (price, time) => {
       console.log(message);
       stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
+    } else if (percentage >= takeProfitPercentageBreakpoint) {
+      console.log(p.trade.enter, price, percentage);
+      const message = colors.blue("Trade closed!");
+      console.log(message);
+      positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
   shortPositions.forEach(async (p) => {
@@ -208,6 +214,11 @@ const scanPositions = async (price, time) => {
       const message = colors.red("Stop loss!");
       console.log(message);
       stoplosses++;
+      positionClosed(price, p.trade.size, time, p.trade.id);
+    } else if (percentage >= takeProfitPercentageBreakpoint) {
+      console.log(p.trade.enter, price, percentage);
+      const message = colors.blue("Trade closed!");
+      console.log(message);
       positionClosed(price, p.trade.size, time, p.trade.id);
     }
   });
