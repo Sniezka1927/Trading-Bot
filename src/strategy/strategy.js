@@ -22,6 +22,7 @@ let positions = {};
 let currentBalance = balance;
 let wins = 0;
 let loses = 0;
+let winRatio = 0;
 let stoplosses = 0;
 
 const strategy = (candlesticks) => {
@@ -84,8 +85,10 @@ const alertClosePostion = (
   amount,
   type
 ) => {
-  if (profit > 0) wins++;
+  if (profit >= 0) wins++;
   else loses++;
+
+  winRatio = (wins / (wins + loses)) * 100;
   const message = colors.cyan(
     `Type: ${type} | Enter: ${enter.toFixed(2)} | ${new Date(
       time * 1e3
@@ -109,7 +112,9 @@ const alertClosePostion = (
             2
           )}$ | Total percentage: ${totalPercentage.toFixed(
             2
-          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses}`
+          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
+            2
+          )}%`
         )
       : colors.red(
           `Balance ${Number(currentBalance).toFixed(
@@ -118,7 +123,9 @@ const alertClosePostion = (
             2
           )}$  | Total percentage: ${totalPercentage.toFixed(
             2
-          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses}`
+          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
+            2
+          )}%`
         );
 
   console.log(message);

@@ -17,5 +17,15 @@
     "start": " node index.js"
   },
   "author": "Sniezka",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sniezka1927/Trading-Bot.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Sniezka1927/Trading-Bot/issues"
+  },
+  "homepage": "https://github.com/Sniezka1927/Trading-Bot#readme"
 }
