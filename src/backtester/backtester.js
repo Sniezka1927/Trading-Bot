@@ -11,7 +11,6 @@ const backtester = async (interval, product, start, end) => {
   );
   console.log(message);
   const candlesticks = await historicalService(start, end, interval, product);
-
   try {
     Promise.all(
       candlesticks.map(async (stick, index) => {
