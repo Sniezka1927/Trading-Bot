@@ -7,5 +7,5 @@
   "balance": 100,
   "maxInvextPercentage": 50,
   "leverage": 5,
-  "takeProfitPercentageBreakpoint": 2
+  "takeProfitPercentageBreakpoint": 5
 }
