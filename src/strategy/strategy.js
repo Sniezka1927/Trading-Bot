@@ -23,6 +23,8 @@ let positions = {};
 let currentBalance = balance;
 let wins = 0;
 let loses = 0;
+let longWins = 0;
+let shortWins = 0;
 let winRatio = 0;
 let stoplosses = 0;
 
@@ -89,6 +91,9 @@ const alertClosePostion = (
   if (profit >= 0) wins++;
   else loses++;
 
+  if (type === "LONG" && profit >= 0) longWins++;
+  else if (type === "SHORT" && profit >= 0) shortWins++;
+
   winRatio = (wins / (wins + loses)) * 100;
   const message = colors.cyan(
     `Type: ${type} | Enter: ${enter.toFixed(2)} | ${new Date(
@@ -122,15 +127,17 @@ const alertClosePostion = (
             2
           )} |Total Loss:${(+totalProfit).toFixed(
             2
-          )}$  | Total percentage: ${totalPercentage.toFixed(
-            2
-          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
-            2
-          )}%`
+          )}$  | Total percentage: ${totalPercentage.toFixed(2)}%`
         );
 
+  const ratio = colors.blue(
+    `Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
+      2
+    )}% Total Longs Won: ${longWins} | Total Shorts Won: ${shortWins}`
+  );
   console.log(message);
   console.log(totalProfitMessage);
+  console.log(ratio);
 };
 
 const onBuySignal = async (price, time) => {
