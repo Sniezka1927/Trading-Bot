@@ -3,9 +3,9 @@
   "live": false,
   "stoploss": true,
   "exchangeFee": 0.001,
-  "maxLossPercentage": 20,
+  "maxLossPercentage": 10,
   "balance": 100,
   "maxInvextPercentage": 50,
-  "leverage": 5,
-  "takeProfitPercentageBreakpoint": 5
+  "leverage": 2,
+  "takeProfitPercentageBreakpoint": 3
 }

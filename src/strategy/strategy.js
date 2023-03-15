@@ -25,6 +25,8 @@ let wins = 0;
 let loses = 0;
 let longWins = 0;
 let shortWins = 0;
+let totalLongs = 0;
+let totalShorts = 0;
 let winRatio = 0;
 let stoplosses = 0;
 
@@ -133,7 +135,7 @@ const alertClosePostion = (
   const ratio = colors.blue(
     `Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
       2
-    )}% Total Longs Won: ${longWins} | Total Shorts Won: ${shortWins}`
+    )}% | Total Longs: ${totalLongs} | Total Longs Won: ${longWins} | Total Shorts ${totalShorts} | Total Shorts Won: ${shortWins}`
   );
   console.log(message);
   console.log(totalProfitMessage);
@@ -208,12 +210,13 @@ const scanPositions = async (price, time) => {
       console.log(message);
       stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
-    } else if (percentage >= takeProfitPercentageBreakpoint) {
-      console.log(p.trade.enter, price, percentage);
-      const message = colors.blue("Trade closed!");
-      console.log(message);
-      positionClosed(price, p.trade.size, time, p.trade.id);
     }
+    //  else if (percentage >= takeProfitPercentageBreakpoint) {
+    //   console.log(p.trade.enter, price, percentage);
+    //   const message = colors.blue("Trade closed!");
+    //   console.log(message);
+    //   positionClosed(price, p.trade.size, time, p.trade.id);
+    // }
   });
   shortPositions.forEach(async (p) => {
     const percentage = calculatePercentage(p.trade.enter, price, "short");
@@ -222,12 +225,13 @@ const scanPositions = async (price, time) => {
       console.log(message);
       stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
-    } else if (percentage >= takeProfitPercentageBreakpoint) {
-      console.log(p.trade.enter, price, percentage);
-      const message = colors.blue("Trade closed!");
-      console.log(message);
-      positionClosed(price, p.trade.size, time, p.trade.id);
     }
+    // else if (percentage >= takeProfitPercentageBreakpoint) {
+    //   console.log(p.trade.enter, price, percentage);
+    //   const message = colors.blue("Trade closed!");
+    //   console.log(message);
+    //   positionClosed(price, p.trade.size, time, p.trade.id);
+    // }
   });
 };
 
@@ -308,6 +312,7 @@ const detectFutures = (
         time * 1e3
       ).toLocaleTimeString()}`
     );
+    totalLongs++;
     return "long";
   } else if (macdSell && smaSell) {
     // && rsiSell
@@ -318,6 +323,7 @@ const detectFutures = (
         time * 1e3
       ).toLocaleTimeString()}`
     );
+    totalShorts++;
     return "short";
   }
 };

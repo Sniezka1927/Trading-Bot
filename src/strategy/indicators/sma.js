@@ -5,7 +5,7 @@ const sma = async (candlesticks) => {
     average(stick.close, stick.high, stick.low)
   );
   const indicator = tulind.indicators.sma.indicator;
-  const period = 7;
+  const period = 12;
   const results = await indicator([avgPrices], [period]);
   const sma = results[0];
 
