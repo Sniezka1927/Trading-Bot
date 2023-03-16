@@ -1,6 +1,6 @@
 const tulind = require("tulind");
 const average = require("../../utils/average");
-
+const { macdBoundary } = require("../../../config.json");
 const macd = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
     average(stick.close, stick.high, stick.low)
@@ -25,15 +25,10 @@ const macd = async (candlesticks) => {
   const penultimate = histogram[length - 2];
   const last = histogram[length - 1];
 
-  const boundary = -0.5;
-
-  // Long Singal
-
-  const wasAbove = penultimate > boundary;
-  const wasBelow = penultimate < -boundary;
-  // Short Signal
-  const isAbove = last > boundary;
-  const isBelow = last < -boundary;
+  const wasAbove = penultimate > macdBoundary;
+  const wasBelow = penultimate < -macdBoundary;
+  const isAbove = last > macdBoundary;
+  const isBelow = last < -macdBoundary;
 
   const buySignal = wasAbove && isBelow;
   const sellSignal = isAbove && wasBelow;

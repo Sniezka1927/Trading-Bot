@@ -2,7 +2,7 @@
 require("dotenv/config");
 const program = require("commander");
 const backtester = require("./src/backtester/backtester");
-const { live, timestamp } = require("./config.json");
+const { live, timestamp, startDay, endDay } = require("./config.json");
 
 const unixDay = 24 * 60 * 60 * 1e3;
 const startTime = new Date().getTime() - unixDay;
@@ -38,10 +38,9 @@ const main = async () => {
   const options = program.opts();
   const { interval, product, start, end } = options;
   if (!live) {
-    for (let i = 72; i >= 0; i--) {
+    for (let i = startDay; i >= endDay; i--) {
       const startTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * (i + 1);
       const endTime = new Date().getTime() - 24 * 60 * 60 * 1e3 * i;
-
       await backtester(interval, product, startTime, endTime);
     }
   }

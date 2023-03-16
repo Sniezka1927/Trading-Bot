@@ -1,11 +1,16 @@
 {
   "timestamp": 300,
+  "startDay": 90,
+  "endDay": 30,
   "live": false,
   "stoploss": true,
   "exchangeFee": 0.001,
-  "maxLossPercentage": 25,
-  "balance": 1000,
+  "balance": 100,
   "maxInvextPercentage": 20,
-  "leverage": 5,
-  "takeProfitPercentageBreakpoint": 5
+  "leverage": 2,
+  "maxLossPercentage": 50,
+  "takeProfitPercentageBreakpoint": 5,
+  "macdBoundary": -0.25,
+  "overSold": 25,
+  "overBought": 60
 }

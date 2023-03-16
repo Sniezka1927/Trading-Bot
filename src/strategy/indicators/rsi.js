@@ -1,5 +1,6 @@
 const tulind = require("tulind");
 const average = require("../../utils/average");
+const { overBought, overSold } = require("../../../config.json");
 
 const stochasticRSI = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
@@ -14,8 +15,8 @@ const stochasticRSI = async (candlesticks) => {
   const length = stochrsi.length;
   if (length < 2) return;
   const last = stochrsi[length - 1];
-  const sellBreakpoint = 60;
-  const buyBreakpoint = 30;
+  const sellBreakpoint = overSold;
+  const buyBreakpoint = overBought;
   const sellSignal = last > sellBreakpoint;
   const buySignal = last < buyBreakpoint;
   return { rsiBuy: buySignal, rsiSell: sellSignal };

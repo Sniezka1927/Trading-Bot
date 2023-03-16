@@ -29,7 +29,7 @@ let totalLongs = 0;
 let totalShorts = 0;
 let winRatio = 0;
 let stoplosses = 0;
-const maxPositions = balance / maxInvextPercentage;
+const maxPositions = ~~(100 / maxInvextPercentage);
 
 const strategy = (candlesticks) => {
   run(candlesticks);
@@ -37,6 +37,7 @@ const strategy = (candlesticks) => {
 
 const positionClosed = async (price, size, time, id) => {
   const position = positions[id];
+
   if (position.state === "closed") return;
   if (position.type === "long") {
     const open = position.trade.enter;
@@ -76,6 +77,8 @@ const positionClosed = async (price, size, time, id) => {
 
   if (position) {
     positions[id].state = "closed";
+    const { opened } = await canOpen();
+    console.log("Currently we are having", opened, "positions opened");
   }
 };
 
@@ -146,13 +149,19 @@ const alertClosePostion = (
 const onBuySignal = async (price, time) => {
   const tradeAmount = currentBalance * (maxInvextPercentage / 100);
   const size = tradeAmount / price;
+
+  const { canBeOpen } = await canOpen();
+  if (!canBeOpen) return;
+
   const message = colors.yellow(
     `Longing at ${price}$ | Size ${size} |  ${new Date(
       time * 1e3
     ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()} `
   );
   console.log(message);
+  totalLongs++;
   const id = randomstring.generate(20);
+
   openLongPosition(price, time, size, tradeAmount, id);
 };
 
@@ -164,6 +173,7 @@ const onSellSignal = async (price, time) => {
       time * 1e3
     ).toLocaleDateString()} ${new Date(time * 1e3).toLocaleTimeString()}`
   );
+  totalShorts++;
   console.log(message);
   const id = randomstring.generate(20);
   openShortPosition(price, time, size, tradeAmount, id);
@@ -234,6 +244,14 @@ const scanPositions = async (price, time) => {
   });
 };
 
+const canOpen = async () => {
+  const longPositions = filterPositions("long");
+  const shortPositions = filterPositions("short");
+  const openedPositions = longPositions.length + shortPositions.length;
+  if (openedPositions < maxPositions)
+    return { canBeOpen: true, opened: openedPositions };
+  else return { canBeOpen: false, opened: openedPositions };
+};
 const run = async (sticks) => {
   const len = sticks.length;
 
@@ -267,8 +285,6 @@ const run = async (sticks) => {
   if (stoploss) {
     scanPositions(price, timestamp);
   }
-
-  // price / maxBalanceInvestment
 
   const positionType = detectFutures(
     macdBuy,
@@ -311,7 +327,6 @@ const detectFutures = (
         time * 1e3
       ).toLocaleTimeString()}`
     );
-    totalLongs++;
     return "long";
   } else if (macdSell && smaSell & rsiSell) {
     // && rsiSell
@@ -322,7 +337,6 @@ const detectFutures = (
         time * 1e3
       ).toLocaleTimeString()}`
     );
-    totalShorts++;
     return "short";
   }
 };
