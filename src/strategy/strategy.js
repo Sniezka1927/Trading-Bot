@@ -29,6 +29,7 @@ let totalLongs = 0;
 let totalShorts = 0;
 let winRatio = 0;
 let stoplosses = 0;
+const maxPositions = balance / maxInvextPercentage;
 
 const strategy = (candlesticks) => {
   run(candlesticks);
@@ -210,13 +211,12 @@ const scanPositions = async (price, time) => {
       console.log(message);
       stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
+    } else if (percentage >= takeProfitPercentageBreakpoint) {
+      console.log(p.trade.enter, price, percentage);
+      const message = colors.blue("Trade closed!");
+      console.log(message);
+      positionClosed(price, p.trade.size, time, p.trade.id);
     }
-    //  else if (percentage >= takeProfitPercentageBreakpoint) {
-    //   console.log(p.trade.enter, price, percentage);
-    //   const message = colors.blue("Trade closed!");
-    //   console.log(message);
-    //   positionClosed(price, p.trade.size, time, p.trade.id);
-    // }
   });
   shortPositions.forEach(async (p) => {
     const percentage = calculatePercentage(p.trade.enter, price, "short");
@@ -225,13 +225,12 @@ const scanPositions = async (price, time) => {
       console.log(message);
       stoplosses++;
       positionClosed(price, p.trade.size, time, p.trade.id);
+    } else if (percentage >= takeProfitPercentageBreakpoint) {
+      console.log(p.trade.enter, price, percentage);
+      const message = colors.blue("Trade closed!");
+      console.log(message);
+      positionClosed(price, p.trade.size, time, p.trade.id);
     }
-    // else if (percentage >= takeProfitPercentageBreakpoint) {
-    //   console.log(p.trade.enter, price, percentage);
-    //   const message = colors.blue("Trade closed!");
-    //   console.log(message);
-    //   positionClosed(price, p.trade.size, time, p.trade.id);
-    // }
   });
 };
 
@@ -314,7 +313,7 @@ const detectFutures = (
     );
     totalLongs++;
     return "long";
-  } else if (macdSell && smaSell) {
+  } else if (macdSell && smaSell & rsiSell) {
     // && rsiSell
     console.log(
       `That's a chance to short!`,

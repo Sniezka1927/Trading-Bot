@@ -5,6 +5,7 @@ const macd = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
     average(stick.close, stick.high, stick.low)
   );
+  const closes = candlesticks.map((stick) => stick.close);
 
   const shortPeriod = 12;
   const longPeriod = 26;
@@ -13,7 +14,7 @@ const macd = async (candlesticks) => {
   const indicator = tulind.indicators.macd.indicator;
 
   const results = await indicator(
-    [avgPrices],
+    [closes],
     [shortPeriod, longPeriod, signalPeriod]
   );
   const histogram = results[2];
@@ -24,10 +25,13 @@ const macd = async (candlesticks) => {
   const penultimate = histogram[length - 2];
   const last = histogram[length - 1];
 
-  const boundary = 0;
+  const boundary = -0.5;
+
+  // Long Singal
 
   const wasAbove = penultimate > boundary;
   const wasBelow = penultimate < -boundary;
+  // Short Signal
   const isAbove = last > boundary;
   const isBelow = last < -boundary;
 

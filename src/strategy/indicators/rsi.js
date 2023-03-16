@@ -5,14 +5,16 @@ const stochasticRSI = async (candlesticks) => {
   const avgPrices = candlesticks.map((stick) =>
     average(stick.close, stick.high, stick.low)
   );
+  const closes = candlesticks.map((stick) => stick.close);
+
   const period = 12;
   const indicator = tulind.indicators.stochrsi.indicator;
-  const results = await indicator([avgPrices], [period]);
+  const results = await indicator([closes], [period]);
   const stochrsi = results[0];
   const length = stochrsi.length;
   if (length < 2) return;
   const last = stochrsi[length - 1];
-  const sellBreakpoint = 70;
+  const sellBreakpoint = 60;
   const buyBreakpoint = 30;
   const sellSignal = last > sellBreakpoint;
   const buySignal = last < buyBreakpoint;
