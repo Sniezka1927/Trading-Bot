@@ -110,7 +110,8 @@ const alertClosePostion = (
       2
     )}| Amount: ${amount}$ | Size: ${size} | Trade Profit: ${Number(
       profit
-    ).toFixed(2)}$ | Percentage: ${percentage}%`
+    ).toFixed(2)}$ `
+    // | Percentage: ${percentage}%
   );
 
   currentBalance = +balance + +totalProfit;
@@ -122,20 +123,19 @@ const alertClosePostion = (
             2
           )}$ | Total Profit: ${(+totalProfit).toFixed(
             2
-          )}$ | Total percentage: ${totalPercentage.toFixed(
-            2
-          )}% | Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
+          )}$  Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
             2
           )}%`
         )
       : colors.red(
           `Balance ${Number(currentBalance).toFixed(
             2
-          )} |Total Loss:${(+totalProfit).toFixed(
-            2
-          )}$  | Total percentage: ${totalPercentage.toFixed(2)}%`
+          )} |Total Loss:${(+totalProfit).toFixed(2)}$ `
         );
-
+  // | Total percentage: ${totalPercentage.toFixed(
+  //   2
+  // // )}% |
+  // | Total percentage: ${totalPercentage.toFixed(2)}%
   const ratio = colors.blue(
     `Wins: ${wins} | Loses: ${loses} | Stoplosses: ${stoplosses} | Ratio: ${winRatio.toFixed(
       2
