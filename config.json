@@ -1,6 +1,6 @@
 {
   "timestamp": 300,
-  "startDay": 365,
+  "startDay": 30,
   "endDay": 0,
   "live": false,
   "stoploss": true,
